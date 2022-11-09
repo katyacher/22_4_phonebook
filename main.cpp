@@ -1,85 +1,86 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <sstream>// переделать - не по тз
+#include <sstream>
+#include <vector>
 
 bool is_phone_number(std::string number);
 
-void search_name(std::map<std::string, std::string>& myMap, std::string key);
-
-bool search_number(std::map<std::string, std::string>& myMap, std::string value);
-
-void add(std::map<std::string, std::string>& myMap, std::string key, std::string value);
-
-void print_map(std::map<std::string, std::string>& myMap);
+void name_search(std::map<std::string, std::string>& myMap, std::string key);
+void phone_search(std::map<std::string, std::vector<std::string>>& myMap, std::string key);
+void print_map(std::map<std::string, std::vector<std::string>>& myMap);
 
 int main() {
-  std::cout << "22.1 Phonebook\n";
+    std::cout << "22.1 Phonebook\n";
 
-  std::map<std::string, std::string> Phonebook = {{"69-70-30", "Ivanov" },
-                                                  {"77-77-77", "Ivanov" },
-                                                  {"70-70-70", "S.J.Connor"}};
+    std::map<std::string, std::string> Num_key_phonebook = {{"69-70-30", "Ivanov" },
+                                                            {"77-77-77", "Ivanov" },
+                                                            {"70-70-70", "S.J.Connor"}};
 
-  std::string request, phone_number = "", name = "";
-  std::cout << "Enter your request: ";
-  std::getline(std::cin, request);
-  std::stringstream data(request);
-  data >> phone_number >> name;//std::cin или getline()
+    std::map<std::string, std::vector<std::string>> Name_key_phonebook = {{"Ivanov" , {"69-70-30", "77-77-77" }},
+                                                                   {"S.J.Connor", {"70-70-70"}}};
 
-  if(!is_phone_number(phone_number)){
-    name = phone_number;
-    if(!search_number(Phonebook, name))
-        std::cout << "There is no user with this name";
-  } else if(name == ""){
-    search_name(Phonebook, phone_number);
-  } else {
-      add(Phonebook, phone_number, name);
-  }
+    std::string request, first_word = "", second_word = "";
+    std::cout << "Enter your request: ";
+    std::getline(std::cin, request);
+    std::stringstream data(request);
+    data >> first_word >> second_word;
 
-  std::cout << std::endl << "Check yor phonebook? y/n: ";
-  std::string answer;
-  std::cin >> answer;
-  if(answer == "y") print_map(Phonebook);
-
-}
-
-
-//поиск по ключу
-void search_name(std::map<std::string, std::string>& myMap, std::string key){
-  std::map<std::string, std::string>::iterator it = myMap.find(key);
-  if(it != myMap.end()){//или nullptr?
-    std::cout << it->second << std::endl;
-  } else {
-    std::cout <<  "There is no user with this phone number" << std::endl;
-  }
-}
-//поиск по значению
-bool search_number(std::map<std::string, std::string>& myMap, std::string value){
-    bool searched = false;
-    for(std::map<std::string, std::string>::iterator it = myMap.begin(); it!= myMap.end(); ++it){
-        if(it->second == value){
-            searched = true;
-            std::cout << it->first << " ";
+    if(!is_phone_number(first_word)){
+        phone_search(Name_key_phonebook, first_word);
+    } else if(second_word == ""){
+        name_search(Num_key_phonebook, first_word);
+    } else {
+        std::pair<std::map<std::string, std::string>::iterator,bool> ret;
+        ret = Num_key_phonebook.insert(std::pair<std::string, std::string>(first_word, second_word));
+        if( ret.second == false){
+            std::cout << "This phone number is already in the phonebook";
+            std::cout << " with a name " << ret.first->second << std::endl;
+        } else{
+            Name_key_phonebook[second_word].push_back(first_word);
+            std::cout << "User added successfully." << std::endl;
         }
     }
-    return searched;
-}
-
-//вставка в map
-void add(std::map<std::string, std::string>& myMap, std::string key, std::string value){
-   myMap.insert(std::pair<std::string, std::string>(key, value));
-  //нужно проверить, произошла ли вставка?
+    std::cout << "Phonebook (name_key): " << std::endl;
+    print_map(Name_key_phonebook);
+    return 0;
 }
 
 
 bool is_phone_number(std::string number){
-  for(int i = 0; i < number.length(); i++){
-    if((number[i] >= '0' && number[i] <= '9') || number[i] == '-') return true;
-  }
-  return false;
-}
-void print_map(std::map<std::string, std::string>& myMap){
-    for(std::map<std::string, std::string>::iterator it = myMap.begin(); it!= myMap.end(); ++it){
-        std::cout << it->first << " " << it->second << std::endl;
+    for(int i = 0; i < number.length(); i++){
+        if((number[i] < '0' || number[i] > '9') && number[i] != '-') return false;
     }
+    return true;
+}
+
+
+void phone_search(std::map<std::string, std::vector<std::string>>& myMap, std::string key){
+    std::map<std::string, std::vector<std::string>>::iterator it = myMap.find(key);
+    if(it != myMap.end()){
+        for(auto& value: it->second){
+            std::cout << value << " ";
+        }
+    } else {
+        std::cout <<  "There is no user with this phone number" << std::endl;
+    }
+}
+void name_search(std::map<std::string, std::string>& myMap, std::string key){
+    std::map<std::string, std::string>::iterator it = myMap.find(key);
+    if(it != myMap.end()){
+        std::cout << it->second << std::endl;
+    } else {
+        std::cout <<  "There is no user with this phone number" << std::endl;
+    }
+}
+ void print_map(std::map<std::string, std::vector<std::string>>& myMap){
+     std::map<std::string, std::vector<std::string>>::iterator it;
+     for (it = myMap.begin(); it != myMap.end(); ++it)
+     {
+         std::cout << it->first << ": ";
+         for(auto& item: it->second){
+             std::cout << item << " ";
+         }
+         std::cout << std::endl;
+     }
 }
